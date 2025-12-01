@@ -11,7 +11,8 @@ A clean, resizable GUI with:
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-
+import os
+import ctypes
 
 class ReconApp(tk.Tk):
     def __init__(self):
@@ -23,6 +24,9 @@ class ReconApp(tk.Tk):
         self.status_var = tk.StringVar(value="Ready")
         self._build_ui()
         self._populate_tree()
+
+        global loadLib
+        loadLib = ctypes.CDLL(os.path.abspath("./main.so"))
 
     # ------------------------------------------------------------------ #
     # UI Construction
@@ -41,6 +45,13 @@ class ReconApp(tk.Tk):
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.quit)
         menubar.add_cascade(label="File", menu=file_menu)
+
+        settings_menu = tk.Menu(menubar, tearoff=0)
+        settings_menu.add_command(label="New", command=self.new_file)
+        settings_menu.add_separator()
+        settings_menu.add_command(label="Exit", command=self.quit)
+        menubar.add_cascade(label="Settings", menu=settings_menu)
+
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
         help_menu.add_command(label="About", command=self.show_about)
@@ -53,6 +64,7 @@ class ReconApp(tk.Tk):
 
         ttk.Button(toolbar, text="New", command=self.new_file).pack(side="left", padx=2)
         ttk.Button(toolbar, text="About", command=self.show_about).pack(side="left", padx=2)
+        ttk.Button(toolbar, text="Config", command=self.show_about).pack(side="left", padx=2)
 
     def _create_main_layout(self): 
         # Horizontal split: tree | editor+log
@@ -87,6 +99,8 @@ class ReconApp(tk.Tk):
     def _build_input_area(self, parent):
         frame = ttk.Frame(parent, padding=10)
         frame.columnconfigure(0, weight=1)
+
+        #
 
         # URL
         ttk.Label(frame, text="Target URL:").grid(row=0, column=0, sticky="w", pady=(0, 4))
@@ -150,7 +164,7 @@ class ReconApp(tk.Tk):
 
         mainTree = [
             ("Main", "home"),
-            ("Reconnaissance", "scan"),
+            ("Basic Recon", "scan"),
         ]
         toolTree = [
             ("Settings", "settings"),
@@ -186,6 +200,17 @@ class ReconApp(tk.Tk):
         self.log.insert("end", f"Viewing section: {name}\n")
         self.log.see("end")
 
+
+    def on_tree_select(self, event):
+        sel = self.tree.focus()
+        if not sel:
+            return
+        name = self.tree.item(sel, "text")
+        self.status_var.set(f"Selected: {name}")
+        self.log.insert("end", f"Viewing section: {name}\n")
+        self.log.see("end")
+
+
     def submit(self):
         url = self.url_entry.get().strip()
         port = self.port_entry.get().strip()
@@ -196,12 +221,22 @@ class ReconApp(tk.Tk):
         if port in ("", "443"):
             port = "80"
 
+        url = url.encode("utf-8")
+        port = port.encode("utf-8")
+        loadLib.process_data_input.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        loadLib.process_data_input.restype = ctypes.c_void_p
+
+        
+        
+        loadLib.process_data_input(url, port)
+
         result = f"Scanning {url} on port {port}..."
         self.log.insert("end", result + "\n")
         self.log.see("end")
         self.status_var.set(f"Submitted: {url}:{port}")
 
         # Simulate work
+
         self.after(100, lambda: self.log.insert("end", "Scan complete. No vulnerabilities found.\n"))
         self.after(100, self.log.see, "end")
 
