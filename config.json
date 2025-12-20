@@ -1,0 +1,11 @@
+{
+    "tools": {
+        "Nmap": {
+            "path": "path/to/location.bin",
+            "args": ["-sC", "-sV", "-v"]
+        },
+
+        "Nikto": {},
+        "SQLmap": {}
+        }
+}

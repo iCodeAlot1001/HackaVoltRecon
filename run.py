@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
-"""
-Hackavolt Reconnaissance Tool
-A clean, resizable GUI with:
-- Tree sidebar
-- URL + Port input
-- Submit button
-- Scrollable log
-- Status bar & menu
-"""
 
 import tkinter as tk
 from tkinter import ttk, messagebox
 import os
 import ctypes
+import simdjson
 
 class ReconApp(tk.Tk):
     def __init__(self):
@@ -64,7 +56,7 @@ class ReconApp(tk.Tk):
 
         ttk.Button(toolbar, text="New", command=self.new_file).pack(side="left", padx=2)
         ttk.Button(toolbar, text="About", command=self.show_about).pack(side="left", padx=2)
-        ttk.Button(toolbar, text="Config", command=self.show_about).pack(side="left", padx=2)
+        ttk.Button(toolbar, text="Config", command=self.build_input).pack(side="left", padx=2)
 
     def _create_main_layout(self): 
         # Horizontal split: tree | editor+log
@@ -89,18 +81,21 @@ class ReconApp(tk.Tk):
         main_pane.add(right_pane, weight=3)
 
         # Input area
-        input_frame = self._build_input_area(right_pane)
+        # DITO AKO MAGLLALAGAY SWITCH
+        #  
+        #
+        
+        input_frame = self.build_input(right_pane)
         right_pane.add(input_frame, weight=2)
 
         # Log area
         log_frame = self._build_log_area(right_pane)
         right_pane.add(log_frame, weight=1)
 
+
     def _build_input_area(self, parent):
         frame = ttk.Frame(parent, padding=10)
         frame.columnconfigure(0, weight=1)
-
-        #
 
         # URL
         ttk.Label(frame, text="Target URL:").grid(row=0, column=0, sticky="w", pady=(0, 4))
@@ -117,6 +112,26 @@ class ReconApp(tk.Tk):
         submit_btn.grid(row=3, column=1, sticky="e")
 
         return frame
+    
+    def build_input(self, parent):
+        frame = ttk.Frame(parent, padding=10)
+        frame.columnconfigure(0, weight=1)
+
+        # URL
+        ttk.Label(frame, text="Target URL:").grid(row=0, column=0, sticky="w", pady=(0, 4))
+        self.url_entry = self._placeholder_entry(frame, "https://exaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaample.com")
+        self.url_entry.grid(row=1, column=0, sticky="ew", columnspan=2, pady=(0, 8))
+
+        # Port
+        ttk.Label(frame, text="Port:").grid(row=2, column=0, sticky="w", pady=(0, 4))
+        self.port_entry = self._placeholder_entry(frame, "443")
+        self.port_entry.grid(row=3, column=0, sticky="w", padx=(0, 8))
+
+        # Submit
+        submit_btn = ttk.Button(frame, text="Submit", command=self.submit)
+        submit_btn.grid(row=3, column=1, sticky="e")
+
+        return frame    
 
     def _build_log_area(self, parent):
         frame = ttk.Frame(parent)
@@ -160,24 +175,32 @@ class ReconApp(tk.Tk):
         entry.bind("<FocusOut>", on_focus_out)
         return entry
 
-    def _populate_tree(self):
 
-        mainTree = [
-            ("Main", "home"),
-            ("Basic Recon", "scan"),
-        ]
-        toolTree = [
-            ("Settings", "settings"),
-            ("Targets", "target"),
-            ("Reports", "report"),
-        ]
-        for name, icon in mainTree:
-            self.tree.insert("", "end", text=name, values=(icon,))
-        for name, icon in toolTree:
-            self.tree.insert("", "end", text=name, values=(icon,))
+
+    def _populate_tree(self):
+        try:
+            with open('config.json', 'rb') as f:
+                doc = simdjson.load(f)
+
+            file_path = ''
+            i = doc['tools']
+            for key in i:
+                self.tree.insert("", "end", text=key, values=('',))
+
+        except FileNotFoundError:
+            print(f"Error: The file '{file_path}' was not found.")
+        except simdjson.ParseError as e:
+            print(f"Error: Failed to parse JSON content. {e}")
+        except KeyError as e:
+            print(f"Error: The key {e} does not exist in the JSON.")
+
+
+
+    
     # ------------------------------------------------------------------ #
     # Actions
     # ------------------------------------------------------------------ #
+
     def new_file(self):
         self.log.insert("end", "New session started.\n")
         self.log.see("end")
@@ -222,13 +245,13 @@ class ReconApp(tk.Tk):
             port = "80"
 
         url = url.encode("utf-8")
-        port = port.encode("utf-8")
-        loadLib.process_data_input.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-        loadLib.process_data_input.restype = ctypes.c_void_p
+        port_to_int = int(port)
 
+        loadLib.process_data_input.argtypes = [ctypes.c_char_p, ctypes.c_int]
+        loadLib.process_data_input.restype = ctypes.c_void_p
         
-        
-        loadLib.process_data_input(url, port)
+        loadLib.process_data_input(url, port_to_int)
+
 
         result = f"Scanning {url} on port {port}..."
         self.log.insert("end", result + "\n")
