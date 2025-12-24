@@ -5,6 +5,7 @@ from tkinter import ttk, messagebox
 import os
 import ctypes
 import simdjson
+from tkterminal import Terminal
 
 class ReconApp(tk.Tk):
     def __init__(self):
@@ -90,6 +91,8 @@ class ReconApp(tk.Tk):
 
         # Log area
         log_frame = self._build_log_area(right_pane)
+    
+
         right_pane.add(log_frame, weight=1)
 
 
@@ -138,16 +141,33 @@ class ReconApp(tk.Tk):
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
-        self.log = tk.Text(frame, wrap="word", height=8)
-        self.log.grid(row=0, column=0, sticky="nsew")
 
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=self.log.yview)
-        vsb.grid(row=0, column=1, sticky="ns")
-        self.log.configure(yscrollcommand=vsb.set)
+        terminal = Terminal(frame,foreground="green", background="black",highlightcolor="green")
+        terminal.grid(row=0, column=0, sticky="nsew")
+        terminal.shell = True
 
-        self.log.insert("end", "Application started. Ready for reconnaissance.\n")
-        self.log.see("end")
         return frame
+
+    def current_page(self):
+        try: #check config file
+            with open('config.json', 'rb') as f:
+                doc = simdjson.load(f)
+
+            file_path = ''
+            i = doc['tools']
+            for key in i:
+                self.tree.insert("", "end", text=key, values=('',))
+
+        except FileNotFoundError:
+            print(f"Error: The file '{file_path}' was not found.")
+        except simdjson.ParseError as e:
+            print(f"Error: Failed to parse JSON content. {e}")
+        except KeyError as e:
+            print(f"Error: The key {e} does not exist in the JSON.")
+
+
+        current_page = ""
+        return current_page
 
     def _create_statusbar(self):
         statusbar = ttk.Label(self, textvariable=self.status_var, relief="sunken", padding=4)
@@ -183,9 +203,11 @@ class ReconApp(tk.Tk):
                 doc = simdjson.load(f)
 
             file_path = ''
-            i = doc['tools']
-            for key in i:
-                self.tree.insert("", "end", text=key, values=('',))
+            config = doc['tools']
+            for tool in config:
+                i += 1
+                self.tree.insert("", "end", text=tool, values=('',))
+
 
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
@@ -210,8 +232,6 @@ class ReconApp(tk.Tk):
         messagebox.showinfo(
             "About",
             "Hackavolt Reconnaissance Tool\n"
-            "A clean, modern Tkinter GUI\n"
-            "Built with love ❤️"
         )
 
     def on_tree_select(self, event):
