@@ -95,7 +95,6 @@ class ReconApp(tk.Tk):
 
         right_pane.add(log_frame, weight=1)
 
-
     def _build_input_area(self, parent):
         frame = ttk.Frame(parent, padding=10)
         frame.columnconfigure(0, weight=1)
@@ -148,30 +147,82 @@ class ReconApp(tk.Tk):
 
         return frame
 
-    def current_page(self):
-        try: #check config file
-            with open('config.json', 'rb') as f:
-                doc = simdjson.load(f)
+# """   def current_page(self):
+#         try: #check config file
+#             with open('config.json', 'rb') as f:
+#                 doc = simdjson.load(f)
 
-            file_path = ''
-            i = doc['tools']
-            for key in i:
-                self.tree.insert("", "end", text=key, values=('',))
+#             file_path = ''
+#             i = doc['tools']
+#             for key in i:
+#                 self.tree.insert("", "end", text=key, values=('',))
 
-        except FileNotFoundError:
-            print(f"Error: The file '{file_path}' was not found.")
-        except simdjson.ParseError as e:
-            print(f"Error: Failed to parse JSON content. {e}")
-        except KeyError as e:
-            print(f"Error: The key {e} does not exist in the JSON.")
+#         except FileNotFoundError:
+#             print(f"Error: The file '{file_path}' was not found.")
+#         except simdjson.ParseError as e:
+#             print(f"Error: Failed to parse JSON content. {e}")
+#         except KeyError as e:
+#             print(f"Error: The key {e} does not exist in the JSON.")
 
 
-        current_page = ""
-        return current_page
+#         current_page = ""
+#         return current_page
+# """ #
 
     def _create_statusbar(self):
         statusbar = ttk.Label(self, textvariable=self.status_var, relief="sunken", padding=4)
         statusbar.pack(fill="x", side="bottom")
+
+    def _populate_tree(self):
+        try: # load file. obviously...
+            with open('config.json', 'rb') as f:
+                doc = simdjson.load(f)
+
+            file_path = ''
+            i = 0
+            i2 = 0
+
+            mainTools = []
+            ToolItem = []
+            ToolValue = []
+            Arguments = []
+
+            x = doc['tools']
+            y = 0
+            c = 0
+            x1 = 0
+            x2 = 0
+            current_iteration = 0
+            
+        #    while (!False):
+            for maintools in x: # {tools}
+                mainTools.append(maintools)
+                print(mainTools[i])
+                self.tree.insert("", "end", text=maintools, values=('',))
+
+                i += 1                
+
+            for toolitem in doc['tools'][mainTools[y]]:
+                ToolItem.append(toolitem)
+                print(ToolItem[y])
+                for toolval in doc['tools'][mainTools[x1]][ToolItem[x2]]:
+                    ToolValue.append(toolval)
+                    print(ToolValue[x1])
+                    print('nigga')
+                    x2 += 1
+
+                x1 += 1
+                y += 1
+            print("for loop 3...")
+
+
+
+        
+        except FileNotFoundError:
+            print(f"Error: The file '{file_path}' was not found.")
+        except KeyError as e:
+            print(f"Error: The key {e} does not exist in the JSON.")
+
 
     # ------------------------------------------------------------------ #
     # Helpers
@@ -195,32 +246,9 @@ class ReconApp(tk.Tk):
         entry.bind("<FocusOut>", on_focus_out)
         return entry
 
-
-
-    def _populate_tree(self):
-        try:
-            with open('config.json', 'rb') as f:
-                doc = simdjson.load(f)
-
-            file_path = ''
-            config = doc['tools']
-            for tool in config:
-                i += 1
-                self.tree.insert("", "end", text=tool, values=('',))
-
-
-        except FileNotFoundError:
-            print(f"Error: The file '{file_path}' was not found.")
-        except simdjson.ParseError as e:
-            print(f"Error: Failed to parse JSON content. {e}")
-        except KeyError as e:
-            print(f"Error: The key {e} does not exist in the JSON.")
-
-
-
     
     # ------------------------------------------------------------------ #
-    # Actions
+    #     ACTIONS
     # ------------------------------------------------------------------ #
 
     def new_file(self):

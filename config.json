@@ -4,7 +4,7 @@
             "path": "path/to/location.bin",
             "targetURL": ["Target URL", "http://example.com", "text_input"],
             "port": ["Port", "80", "text_input"],
-            "args": ["-sC", "-sV", "-v"]
+            "defaultArgs": ["-sC", "-sV", "-v"]
         },
 
         "Nikto": {},
