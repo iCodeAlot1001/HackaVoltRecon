@@ -19,7 +19,7 @@ class ReconApp(tk.Tk):
         self._populate_tree()
 
         global loadLib
-        loadLib = ctypes.CDLL(os.path.abspath("./main.so"))
+        #loadLib = ctypes.CDLL(os.path.abspath("./main.so"))
 
     # ------------------------------------------------------------------ #
     # UI Construction
@@ -187,37 +187,39 @@ class ReconApp(tk.Tk):
             ToolValue = []
             Arguments = []
 
-            x = doc['tools']
-            y = 0
-            c = 0
+            y = 0 #Tool (Nmap)
+            c = 0 
             x1 = 0
             x2 = 0
+            x3 = 0
+            x4 = 0
+            x5 = 0
             current_iteration = 0
             
         #    while (!False):
-            for maintools in x: # {tools}
+            for maintools in doc['tools']: # {tools}
                 mainTools.append(maintools)
                 print(mainTools[i])
                 self.tree.insert("", "end", text=maintools, values=('',))
-
                 i += 1                
-
-            for toolitem in doc['tools'][mainTools[y]]:
-                ToolItem.append(toolitem)
-                print(ToolItem[y])
-                for toolval in doc['tools'][mainTools[x1]][ToolItem[x2]]:
-                    ToolValue.append(toolval)
-                    print(ToolValue[x1])
-                    print('nigga')
+                print("")
+                for toolitem in doc['tools'][mainTools[y]]: # get keys in a tool
+                    ToolItem.append(toolitem)
+                    print(ToolItem[x1])
+                    if (False):
+                        continue
+                    x1 += 1
+                print("")
+                for item in doc['tools'][mainTools[y]][ToolItem[x2]]:
+                    if (x2 == len(ToolItem)):
+                        break
+                    ToolValue.append(doc['tools'][mainTools[y]][ToolItem[x2]])
+                    print(f"Key: {ToolItem[x2]}, Value: {ToolValue[x2]}")
                     x2 += 1
-
-                x1 += 1
                 y += 1
-            print("for loop 3...")
-
-
-
-        
+                print("")
+            print("End")
+  
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
         except KeyError as e:
